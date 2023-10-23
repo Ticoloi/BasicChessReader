@@ -1,0 +1,172 @@
+import os
+import io
+import chess
+import chess.pgn
+import glob
+import tkinter as tk
+from tkinter import filedialog
+
+root = tk.Tk()
+root.withdraw()
+
+opcions_max = 21
+game = None
+total_dim = 0
+data_file_name = "data.txt"
+
+def clear_screen():
+    if os.name == 'posix':
+        os.system('clear')
+    else:
+        os.system('cls')
+
+folder_selected = filedialog.askdirectory()
+print("Carpeta seleccionada:", folder_selected)
+
+path = folder_selected #camí a la base
+os.chdir(path)  #Obre la carpeta amb camí path i ara treballarem dins de ella!
+
+#os.startfile(path) #Debug
+
+arxius = [f for f in os.listdir() if f.endswith('.pgn')] #Obté tots els arxius que hi hagin a la carpeta
+
+#print(arxius)
+for arxiu in arxius: #Per cada arxiu dins la carpeta
+    with open(arxiu, 'r') as f:    #Ho obre com a file
+        while True:
+            game = chess.pgn.read_game(f)
+            if game is None:
+                break
+            print("-------------------------------------------------------------------------------------")
+            print(arxiu)
+            print("--------------------------------------------------------------------")
+            total_dim = total_dim +1
+            print(total_dim)
+            print("--------------------------------------------------------------------")
+            clear_screen()
+
+clear_screen()
+tabla_blanc = [i for i in range(total_dim)] #La taula, que servirà per a a calcular
+tabla_negre = [i for i in range(total_dim)] #La taula, que servirà per a a calcular
+
+print("-------------------------------------------------------------------------------------")
+print("dimensions: ")
+print(tabla_blanc)
+print(tabla_blanc)
+print(total_dim)
+print("-------------------------------------------------------------------------------------")
+
+clear_screen()
+columna = -1 #La columna, la definim avans de entrar al for
+
+
+for arxiu in arxius: #Per cada arxiu dins la carpeta
+    with open(arxiu, 'r') as f:    #Ho obre com a file
+        while True:
+            game = chess.pgn.read_game(f)
+            if game is None:
+                break
+            jugada_b = (move.uci() for move in list(game.mainline_moves())[0:1])
+            jugada_n = (move.uci() for move in list(game.mainline_moves())[1:2])
+            columna = columna+1
+            tabla_blanc[columna] = str(''.join(jugada_b))
+            tabla_negre[columna] = str(''.join(jugada_n))
+            print("-------------------------------------------------------------------------------------")
+            print(arxiu)
+            print("--------------------------------------------------------------------")
+            print(columna)
+            print("--------------------------------------------------------------------")
+            print(columna*100/total_dim, "%")
+            print("--------------------------------------------------------------------")
+            print(tabla_blanc)
+            print("--------------------------------------------------------------------")
+            print(tabla_negre)
+            print("--------------------------------------------------------------------")
+            clear_screen()
+
+print("--------------------------------------------------------------------")
+print(tabla_blanc)
+print("--------------------------------------------------------------------")
+print(tabla_negre)
+print("--------------------------------------------------------------------")
+
+clear_screen()
+
+print("--------------------------------------------------------------------")
+print("Guardant....")
+print("--------------------------------------------------------------------")
+
+clear_screen()
+
+file = open("data_file_name", "w")
+file.write("--------------------------------------------------------------------" + os.linesep)
+
+for i in range(total_dim):
+    file.write(tabla_blanc[i] + os.linesep)
+    file.write("--------------------------------------------------------------------"+ os.linesep )
+file.write("--------------------------------------------------------------------"+ os.linesep )
+for i in range(total_dim):
+    file.write(tabla_negre[i] + os.linesep)
+    file.write("--------------------------------------------------------------------"+ os.linesep )
+
+file.close()
+
+print("--------------------------------------------------------------------")
+print("Guardat!")
+print("--------------------------------------------------------------------")
+
+
+clear_screen()
+
+igualtats_blanques = [i for i in range(opcions_max)] #Definim les 2 matrius de 2 dimensions, amb com a màxim totes les jugades possibles com a máxim.
+igualtats_blanques_num = [i for i in range(opcions_max)]
+igualtats_negres = [i for i in range(opcions_max)]
+igualtats_negres_num = [i for i in range(opcions_max)]
+
+diff_blanca = 0
+
+
+for i in range(total_dim):
+    trobat = False
+    for n in range(opcions_max):
+        if igualtats_blanques[n] == tabla_blanc[i]:
+            igualtats_blanques_num[n] = igualtats_blanques_num[n]+1
+            trobat = True
+    if trobat == False:
+        igualtats_blanques[diff_blanca] = tabla_blanc[i]
+        igualtats_blanques_num[diff_blanca] = 1
+        diff_blanca = diff_blanca + 1
+        print(diff_blanca)
+
+
+diff_negre = 0
+
+for i in range(total_dim):
+    trobat = False
+    for n in range(opcions_max):
+        if igualtats_negres[n] == tabla_negre[i]:
+            igualtats_negres_num[n] = igualtats_negres_num[n]+1
+            trobat = True
+    if trobat == False:
+        igualtats_negres[diff_negre] = tabla_negre[i]
+        igualtats_negres_num[diff_negre] = 1
+        diff_negre = diff_negre + 1
+        print(diff_negre)
+
+clear_screen()
+print("--------------------------------------------------------------------")
+print("Resultat:")
+print("--------------------------------------------------------------------")
+for n in range(diff_blanca):
+    print("Blanc:",'jugada: ',igualtats_blanques[n],'Vegades jugat ',igualtats_blanques_num[n], 'Tant per cent jugat ', igualtats_blanques_num[n]*(100/total_dim), '%')
+
+print("--------------------------------------------------------------------")
+
+for n in range(diff_negre):
+    print("Negre:", 'jugada: ', igualtats_negres[n], 'Vegades jugat ', igualtats_negres_num[n], 'Tant per cent jugat ',igualtats_negres_num[n]*(100/total_dim), '%')
+
+print("--------------------------------------------------------------------")
+print("Numero de partides", total_dim)
+print('Database: ', arxius)
+
+
